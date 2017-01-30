@@ -1,0 +1,62 @@
+#!/bin/bash
+# sudo detect
+user=$(whoami)
+if [ "$user" == "root" ]; then
+	echo "sudo ok"
+else
+	gksu $0
+	exit 0
+fi
+
+title="LogiLed"
+query="Select Funtion"
+options=("Animation" "Color")
+echo "$title"
+PS3="$query "
+
+while opt="$(zenity --title="$title" --text="$query" --list --column="Opciones" "${options[@] $Versiones}")"; do
+
+    case $opt in
+		"${options[0]}" ) 
+			options=("Wave: top to buttom" "Wave: Left to rigth" "Degradate")
+			while opt="$(zenity --title="$title" --text="$query" --list --column="Opciones" "${options[@] $Versiones}")"; do
+				case $opt in
+				"${options[0]}" ) 
+					sudo g810-led -fx-vwave 0a
+					sudo echo "fx-vwave 0a" > /etc/g810-led/profile
+					sh $0
+					exit 0
+					;;
+				"${options[1]}") 
+					sudo g810-led -fx-hwave 0a
+					sudo echo "fx-hwave 0a" > /etc/g810-led/profile
+					sh $0
+					exit 0
+					;;
+				 "${options[2]}") 
+					sudo g810-led -fx-cycle 50
+					sudo echo "fx-cycle 50" > /etc/g810-led/profile
+					sh $0
+					exit 0
+					;;
+				esac
+			done
+        ;;
+    "${options[1]}") 
+		color=$(zenity --color-selection)
+		# Now $? is the exit status of zenity
+		if [[ $? == 0 ]] ; then
+			# Process with sed only if necessary.
+			color=$(echo "$color" | sed 's/\(#\?..\)../\1/g')
+			echo "You selected $color"
+			sudo g810-led -a ${color: -6}
+			sudo echo "a ${color: -6}" > /etc/g810-led/profile
+			sh $0
+			exit 0
+		else
+			echo "No color selected."
+		fi
+        ;;
+    esac
+done
+
